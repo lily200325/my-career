@@ -9,6 +9,11 @@
 <body>
     <div class="container">
         <h1>My Career</h1>
+        <div class="data-actions">
+            <button onclick="exportData()" class="data-button">导出数据</button>
+            <input type="file" id="importFile" style="display: none" onchange="importData(event)">
+            <button onclick="document.getElementById('importFile').click()" class="data-button">导入数据</button>
+        </div>
         <div class="cards-container">
             <a href="#" class="card" onclick="openPage('gonna')">
                 <h2>Gonna</h2>

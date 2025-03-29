@@ -358,4 +358,110 @@ function updateOrder(container) {
         careerData[type] = newOrder;
     }
     saveData();
+}
+
+// 导出数据
+function exportData() {
+    const dataStr = JSON.stringify(careerData, null, 2);
+    
+    // 创建模态框显示数据
+    const content = document.createElement('div');
+    content.innerHTML = `
+        <div class="export-modal">
+            <div class="export-modal-content">
+                <h3>导出数据</h3>
+                <p>请复制以下内容并保存为 .json 文件：</p>
+                <textarea class="export-text" readonly>${dataStr}</textarea>
+                <div class="export-actions">
+                    <button onclick="copyExportData()">复制</button>
+                    <button onclick="closeExportModal()">关闭</button>
+                </div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(content);
+
+    // 自动选中文本
+    const textarea = content.querySelector('.export-text');
+    textarea.select();
+}
+
+// 复制导出数据
+function copyExportData() {
+    const textarea = document.querySelector('.export-text');
+    textarea.select();
+    document.execCommand('copy');
+    alert('已复制到剪贴板');
+}
+
+// 关闭导出模态框
+function closeExportModal() {
+    const modal = document.querySelector('.export-modal');
+    if (modal) {
+        modal.parentElement.remove();
+    }
+}
+
+// 导入数据
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importedData = JSON.parse(e.target.result);
+            
+            // 验证数据结构
+            if (validateData(importedData)) {
+                careerData = importedData;
+                saveData();
+                // 如果当前在某个页面，刷新显示
+                const pageContent = document.getElementById('page-content');
+                if (pageContent.style.display === 'block') {
+                    const currentPage = document.getElementById('page-title').textContent.toLowerCase();
+                    openPage(currentPage);
+                }
+                alert('数据导入成功！');
+            } else {
+                alert('数据格式不正确，请确保导入正确的备份文件。');
+            }
+        } catch (error) {
+            alert('导入失败：文件格式错误');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // 清除文件选择，允许重复导入同一文件
+}
+
+// 验证导入的数据结构
+function validateData(data) {
+    const requiredKeys = ['gonna', 'tried', 'yn', 'people', 'environment'];
+    const requiredYNKeys = ['yes', 'no', 'maybe'];
+    
+    // 检查顶级键是否存在
+    const hasAllKeys = requiredKeys.every(key => key in data);
+    if (!hasAllKeys) return false;
+    
+    // 检查数组类型
+    if (!Array.isArray(data.gonna) || 
+        !Array.isArray(data.tried) || 
+        !Array.isArray(data.people) || 
+        !Array.isArray(data.environment)) {
+        return false;
+    }
+    
+    // 检查 Y/N 结构
+    if (typeof data.yn !== 'object') return false;
+    const hasAllYNKeys = requiredYNKeys.every(key => key in data.yn);
+    if (!hasAllYNKeys) return false;
+    
+    // 检查 Y/N 的子数组
+    if (!Array.isArray(data.yn.yes) || 
+        !Array.isArray(data.yn.no) || 
+        !Array.isArray(data.yn.maybe)) {
+        return false;
+    }
+    
+    return true;
 } 
