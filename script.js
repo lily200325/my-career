@@ -91,11 +91,11 @@ function getTriedContent() {
                         <div class="likes-dislikes">
                             <div>
                                 <span class="emoji">❤️</span>
-                                ${job.likes}
+                                <span class="text-content">${job.likes}</span>
                             </div>
                             <div>
                                 <span class="emoji">💔</span>
-                                ${job.dislikes}
+                                <span class="text-content">${job.dislikes}</span>
                             </div>
                         </div>
                     </div>
@@ -195,9 +195,13 @@ function showAddForm(type) {
         case 'tried':
             content.innerHTML = `
                 <div class="form-group">
-                    <input type="text" id="job-name">
-                    <textarea id="likes"></textarea>
-                    <textarea id="dislikes"></textarea>
+                    <input type="text" id="job-name" placeholder="工作/项目名称">
+                    <textarea id="likes" placeholder="喜欢的方面（每行一条）"></textarea>
+                    <textarea id="dislikes" placeholder="不喜欢的方面（每行一条）"></textarea>
+                    <div class="form-buttons">
+                        <button onclick="openPage('tried')" class="cancel-btn">取消</button>
+                        <button onclick="addTried()" class="save-btn">保存</button>
+                    </div>
                 </div>
             `;
             const jobName = document.getElementById('job-name');
@@ -209,16 +213,10 @@ function showAddForm(type) {
                     likes.focus();
                 }
             });
-            likes.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
+            likes.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab' && !e.shiftKey) {
                     e.preventDefault();
                     dislikes.focus();
-                }
-            });
-            dislikes.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter' && !e.shiftKey && jobName.value.trim()) {
-                    e.preventDefault();
-                    addTried();
                 }
             });
             jobName.focus();
