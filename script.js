@@ -370,19 +370,37 @@ function initSortable(container) {
 
     const items = container.querySelectorAll('.record-card');
     items.forEach(item => {
-        // PC端拖拽
-        item.addEventListener('dragstart', () => {
-            item.classList.add('dragging');
+        // 移除卡片的draggable属性
+        item.removeAttribute('draggable');
+        
+        // 添加拖动手柄
+        const dragHandle = document.createElement('div');
+        dragHandle.className = 'drag-handle';
+        dragHandle.innerHTML = '⋮⋮';
+        dragHandle.setAttribute('draggable', 'true');
+        item.insertBefore(dragHandle, item.firstChild);
+
+        // PC端拖拽 - 只在拖动手柄时触发
+        dragHandle.addEventListener('dragstart', (e) => {
             draggedItem = item;
+            item.classList.add('dragging');
+            // 设置拖动时的透明度
+            setTimeout(() => {
+                item.style.opacity = '0.5';
+            }, 0);
         });
 
-        item.addEventListener('dragend', () => {
-            item.classList.remove('dragging');
-            updateOrder(container);
+        dragHandle.addEventListener('dragend', () => {
+            if (draggedItem) {
+                draggedItem.classList.remove('dragging');
+                draggedItem.style.opacity = '';
+                updateOrder(container);
+                draggedItem = null;
+            }
         });
 
-        // 移动端触摸
-        item.addEventListener('touchstart', (e) => {
+        // 移动端触摸 - 只在拖动手柄时触发
+        dragHandle.addEventListener('touchstart', (e) => {
             draggedItem = item;
             touchStartY = e.touches[0].clientY;
             initialY = item.offsetTop;
@@ -399,7 +417,7 @@ function initSortable(container) {
             });
         }, { passive: false });
 
-        item.addEventListener('touchmove', (e) => {
+        dragHandle.addEventListener('touchmove', (e) => {
             if (!draggedItem) return;
             e.preventDefault();
 
@@ -429,7 +447,7 @@ function initSortable(container) {
             });
         }, { passive: false });
 
-        item.addEventListener('touchend', () => {
+        dragHandle.addEventListener('touchend', () => {
             if (!draggedItem) return;
             
             draggedItem.classList.remove('dragging');

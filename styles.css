@@ -185,21 +185,13 @@ textarea {
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    cursor: grab;
-    touch-action: none;
+    touch-action: pan-y; /* 允许垂直滚动 */
     user-select: none;
 }
 
-/* 添加拖动提示 */
+/* 移除之前的拖动手柄伪元素 */
 .record-card::before {
-    content: '⋮⋮';
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #ccc;
-    font-size: 1.2rem;
-    pointer-events: none;
+    display: none;
 }
 
 .record-card .content {
@@ -400,9 +392,8 @@ button:hover {
 
 /* 拖拽样式 */
 .record-card.dragging {
-    opacity: 0.9;
     background: #f8f8f8;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
 /* 数据操作按钮样式 */
@@ -657,4 +648,22 @@ button:hover {
 
 #environment-list .record-card .content {
     width: 100%;
+}
+
+.drag-handle {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: grab;
+    color: #ccc;
+    font-size: 16px;
+    padding: 8px 4px;
+    touch-action: none;
+    user-select: none;
+    transition: color 0.2s ease;
+}
+
+.drag-handle:hover {
+    color: #666;
 }
