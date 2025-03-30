@@ -312,21 +312,95 @@ let currentYNType = null;
 function initSortable(container) {
     if (!container) return;
 
+    let draggedItem = null;
+    let touchStartY = 0;
+    let initialY = 0;
+    let currentY = 0;
+
     const items = container.querySelectorAll('.record-card');
     items.forEach(item => {
+        // PC端拖拽
         item.addEventListener('dragstart', () => {
             item.classList.add('dragging');
+            draggedItem = item;
         });
 
         item.addEventListener('dragend', () => {
             item.classList.remove('dragging');
             updateOrder(container);
         });
+
+        // 移动端触摸
+        item.addEventListener('touchstart', (e) => {
+            draggedItem = item;
+            touchStartY = e.touches[0].clientY;
+            initialY = item.offsetTop;
+            
+            item.classList.add('dragging');
+            item.style.position = 'relative';
+            item.style.zIndex = '1000';
+            
+            // 记录其他项的初始位置
+            items.forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.initialTop = otherItem.offsetTop;
+                }
+            });
+        }, { passive: false });
+
+        item.addEventListener('touchmove', (e) => {
+            if (!draggedItem) return;
+            e.preventDefault();
+
+            currentY = e.touches[0].clientY - touchStartY;
+            draggedItem.style.transform = `translateY(${currentY}px)`;
+
+            // 计算当前位置
+            const draggedRect = draggedItem.getBoundingClientRect();
+            const draggedCenter = draggedRect.top + draggedRect.height / 2;
+
+            // 移动其他项
+            items.forEach(otherItem => {
+                if (otherItem !== draggedItem) {
+                    const otherRect = otherItem.getBoundingClientRect();
+                    const otherCenter = otherRect.top + otherRect.height / 2;
+
+                    if (draggedCenter < otherCenter && 
+                        draggedItem.initialTop > otherItem.initialTop) {
+                        otherItem.style.transform = 'translateY(100%)';
+                    } else if (draggedCenter > otherCenter && 
+                        draggedItem.initialTop < otherItem.initialTop) {
+                        otherItem.style.transform = 'translateY(-100%)';
+                    } else {
+                        otherItem.style.transform = '';
+                    }
+                }
+            });
+        }, { passive: false });
+
+        item.addEventListener('touchend', () => {
+            if (!draggedItem) return;
+            
+            draggedItem.classList.remove('dragging');
+            draggedItem.style.transform = '';
+            draggedItem.style.position = '';
+            draggedItem.style.zIndex = '';
+
+            // 重置其他项的位置
+            items.forEach(otherItem => {
+                otherItem.style.transform = '';
+            });
+
+            updateOrder(container);
+            draggedItem = null;
+        });
     });
 
     container.addEventListener('dragover', e => {
         e.preventDefault();
         const draggingItem = container.querySelector('.dragging');
+        if (!draggingItem) return;
+        
         const siblings = [...container.querySelectorAll('.record-card:not(.dragging)')];
         const nextSibling = siblings.find(sibling => {
             const box = sibling.getBoundingClientRect();

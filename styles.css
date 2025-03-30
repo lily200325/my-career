@@ -186,6 +186,10 @@ textarea {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    transition: transform 0.2s ease;
 }
 
 .record-card:last-child {
@@ -303,8 +307,23 @@ button:hover {
 
 /* 拖拽样式 */
 .record-card.dragging {
-    opacity: 0.5;
+    opacity: 0.9;
     background: #f8f8f8;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* 添加拖动提示 */
+.record-card::before {
+    content: '⋮⋮';
+    position: absolute;
+    left: 0.5rem;
+    color: #ccc;
+    font-size: 1.2rem;
+    pointer-events: none;
+}
+
+.record-card > *:first-child {
+    margin-left: 2rem;
 }
 
 /* 数据操作按钮样式 */
