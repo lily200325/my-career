@@ -65,7 +65,7 @@ h1 {
     height: 100vh;
     background: white;
     z-index: 1000;
-    display: flex;
+    display: none; /* 修改这里，默认为隐藏 */
     flex-direction: column;
     overflow: hidden;
 }
@@ -657,4 +657,4 @@ button:hover {
 
 #environment-list .record-card .content {
     width: 100%;
-} 
+}

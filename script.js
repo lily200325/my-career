@@ -12,9 +12,13 @@ function openPage(type) {
     const pageContent = document.getElementById('page-content');
     const content = document.getElementById('content');
     const pageTitle = document.getElementById('page-title');
+    const container = document.querySelector('.container');
     
-    pageContent.style.display = 'block';
-    document.querySelector('.container').style.display = 'none';
+    // 如果是从首页进入，显示页面内容并隐藏首页
+    if (container.style.display !== 'none') {
+        pageContent.style.display = 'block';
+        container.style.display = 'none';
+    }
     
     // 设置页面标题
     pageTitle.textContent = type.charAt(0).toUpperCase() + type.slice(1);
@@ -40,15 +44,20 @@ function openPage(type) {
 
     // 添加这行来初始化拖拽
     setTimeout(() => {
-        const container = document.querySelector('.sortable-list');
-        initSortable(container);
+        const sortableList = document.querySelector('.sortable-list');
+        if (sortableList) {
+            initSortable(sortableList);
+        }
     }, 0);
 }
 
 // 返回主页
 function goBack() {
-    document.getElementById('page-content').style.display = 'none';
-    document.querySelector('.container').style.display = 'block';
+    const pageContent = document.getElementById('page-content');
+    const container = document.querySelector('.container');
+    
+    pageContent.style.display = 'none';
+    container.style.display = 'block';
 }
 
 // Gonna页面内容
@@ -772,4 +781,4 @@ function addImageToCard(cardIndex) {
         });
     };
     input.click();
-} 
+}
