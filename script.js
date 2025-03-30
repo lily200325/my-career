@@ -4,7 +4,7 @@ let careerData = JSON.parse(localStorage.getItem('careerData')) || {
     tried: [],
     yn: { yes: [], no: [], maybe: [] },
     people: [],
-    environment: []
+    environment: [] // 每个记录项现在将是一个包含图片数组的对象
 };
 
 // 打开页面
@@ -57,8 +57,13 @@ function getGonnaContent() {
         <div id="gonna-list" class="sortable-list">
             ${careerData.gonna.map((item, index) => `
                 <div class="record-card" draggable="true" data-index="${index}">
-                    ${item}
-                    <button class="delete-btn" onclick="deleteRecord('gonna', ${index})">×</button>
+                    <div class="content">
+                        ${item}
+                    </div>
+                    <div class="actions">
+                        <button class="edit-btn" onclick="showEditForm('gonna', ${index})">✎</button>
+                        <button class="delete-btn" onclick="deleteRecord('gonna', ${index})">×</button>
+                    </div>
                 </div>
             `).join('')}
         </div>
@@ -72,12 +77,23 @@ function getTriedContent() {
         <div id="tried-list" class="sortable-list">
             ${careerData.tried.map((job, index) => `
                 <div class="record-card" draggable="true" data-index="${index}">
-                    <h3>${job.name}</h3>
-                    <div class="likes-dislikes">
-                        <div>❤️ ${job.likes}</div>
-                        <div>💔 ${job.dislikes}</div>
+                    <div class="content">
+                        <h3>${job.name}</h3>
+                        <div class="likes-dislikes">
+                            <div>
+                                <span class="emoji">❤️</span>
+                                ${job.likes}
+                            </div>
+                            <div>
+                                <span class="emoji">💔</span>
+                                ${job.dislikes}
+                            </div>
+                        </div>
                     </div>
-                    <button class="delete-btn" onclick="deleteRecord('tried', ${index})">×</button>
+                    <div class="actions">
+                        <button class="edit-btn" onclick="showEditForm('tried', ${index})">✎</button>
+                        <button class="delete-btn" onclick="deleteRecord('tried', ${index})">×</button>
+                    </div>
                 </div>
             `).join('')}
         </div>
@@ -103,8 +119,13 @@ function getPeopleContent() {
         <div id="people-list" class="sortable-list">
             ${careerData.people.map((item, index) => `
                 <div class="record-card" draggable="true" data-index="${index}">
-                    ${item}
-                    <button class="delete-btn" onclick="deleteRecord('people', ${index})">×</button>
+                    <div class="content">
+                        ${item}
+                    </div>
+                    <div class="actions">
+                        <button class="edit-btn" onclick="showEditForm('people', ${index})">✎</button>
+                        <button class="delete-btn" onclick="deleteRecord('people', ${index})">×</button>
+                    </div>
                 </div>
             `).join('')}
         </div>
@@ -118,12 +139,28 @@ function getEnvironmentContent() {
         <div id="environment-list" class="sortable-list">
             ${careerData.environment.map((item, index) => `
                 <div class="record-card" draggable="true" data-index="${index}">
-                    ${item}
-                    <button class="delete-btn" onclick="deleteRecord('environment', ${index})">×</button>
+                    <div class="content">
+                        <div class="image-grid">
+                            ${(item.images || []).map((img, imgIndex) => `
+                                <div class="image-item">
+                                    <img src="${img}" alt="环境图片">
+                                    <button class="delete-image-btn" onclick="deleteImage(${index}, ${imgIndex})">×</button>
+                                </div>
+                            `).join('')}
+                            ${(!item.images || item.images.length < 5) ? `
+                                <label class="image-upload-label" onclick="addImageToCard(${index})">
+                                    <span>+</span>
+                                </label>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <div class="actions">
+                        <button class="delete-btn" onclick="deleteRecord('environment', ${index})">×</button>
+                    </div>
                 </div>
             `).join('')}
         </div>
-        <button class="add-button" onclick="showAddForm('environment')">+</button>
+        <button class="add-button" onclick="showEnvironmentUpload()">+</button>
     `;
 }
 
@@ -216,8 +253,13 @@ function showYNList(type) {
         <div class="sortable-list">
             ${careerData.yn[type].map((item, index) => `
                 <div class="record-card" draggable="true" data-index="${index}">
-                    ${item}
-                    <button class="delete-btn" onclick="deleteRecord('yn', ${index})">×</button>
+                    <div class="content">
+                        ${item}
+                    </div>
+                    <div class="actions">
+                        <button class="edit-btn" onclick="showEditForm('yn_${type}', ${index})">✎</button>
+                        <button class="delete-btn" onclick="deleteRecord('yn', ${index})">×</button>
+                    </div>
                 </div>
             `).join('')}
         </div>
@@ -538,4 +580,196 @@ function validateData(data) {
     }
     
     return true;
+}
+
+// 显示编辑表单
+function showEditForm(type, index) {
+    let record;
+    let recordElement;
+    
+    if (type.startsWith('yn_')) {
+        const ynType = type.split('_')[1];
+        record = careerData.yn[ynType][index];
+        recordElement = document.querySelector(`[data-index="${index}"]`);
+        type = 'yn';
+    } else {
+        record = careerData[type][index];
+        recordElement = document.querySelector(`[data-index="${index}"]`);
+    }
+    
+    if (type === 'tried') {
+        const formHTML = `
+            <div class="edit-form">
+                <input type="text" id="edit-name" value="${record.name}" placeholder="工作名称">
+                <textarea id="edit-likes" placeholder="喜欢的方面">${record.likes}</textarea>
+                <textarea id="edit-dislikes" placeholder="不喜欢的方面">${record.dislikes}</textarea>
+                <div class="edit-form-buttons">
+                    <button onclick="cancelEdit('${type}', ${index})">取消</button>
+                    <button onclick="saveEdit('${type}', ${index})">保存</button>
+                </div>
+            </div>
+        `;
+        recordElement.innerHTML = formHTML;
+    } else {
+        const formHTML = `
+            <div class="edit-form">
+                <input type="text" id="edit-content" value="${record}" placeholder="内容">
+                <div class="edit-form-buttons">
+                    <button onclick="cancelEdit('${type}', ${index})">取消</button>
+                    <button onclick="saveEdit('${type}', ${index})">保存</button>
+                </div>
+            </div>
+        `;
+        recordElement.innerHTML = formHTML;
+    }
+}
+
+// 保存编辑
+function saveEdit(type, index) {
+    if (type === 'tried') {
+        const name = document.getElementById('edit-name').value.trim();
+        const likes = document.getElementById('edit-likes').value.trim();
+        const dislikes = document.getElementById('edit-dislikes').value.trim();
+        
+        if (name) {
+            careerData[type][index] = { name, likes, dislikes };
+            saveData();
+            openPage(type);
+        }
+    } else if (type === 'yn') {
+        const content = document.getElementById('edit-content').value.trim();
+        if (content) {
+            careerData.yn[currentYNType][index] = content;
+            saveData();
+            showYNList(currentYNType);
+        }
+    } else {
+        const content = document.getElementById('edit-content').value.trim();
+        if (content) {
+            careerData[type][index] = content;
+            saveData();
+            openPage(type);
+        }
+    }
+}
+
+// 取消编辑
+function cancelEdit(type, index) {
+    openPage(type);
+}
+
+// 删除单张图片
+function deleteImage(cardIndex, imageIndex) {
+    careerData.environment[cardIndex].images.splice(imageIndex, 1);
+    if (careerData.environment[cardIndex].images.length === 0) {
+        careerData.environment.splice(cardIndex, 1);
+    }
+    saveData();
+    openPage('environment');
+}
+
+// 显示环境图片上传界面
+function showEnvironmentUpload() {
+    const content = document.getElementById('content');
+    content.innerHTML = `
+        <div class="upload-container">
+            <div class="image-preview-grid"></div>
+            <label class="image-upload-button">
+                <input type="file" accept="image/*" multiple onchange="handleImageUpload(event)" style="display: none;">
+                选择图片（最多5张）
+            </label>
+            <div class="upload-actions">
+                <button onclick="openPage('environment')">取消</button>
+                <button onclick="saveEnvironmentImages()" class="primary">保存</button>
+            </div>
+        </div>
+    `;
+}
+
+// 处理图片上传
+let tempImages = [];
+function handleImageUpload(event) {
+    const files = event.target.files;
+    const previewGrid = document.querySelector('.image-preview-grid');
+    
+    if (tempImages.length + files.length > 5) {
+        alert('最多只能上传5张图片');
+        return;
+    }
+    
+    Array.from(files).forEach(file => {
+        if (tempImages.length >= 5) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            tempImages.push(e.target.result);
+            updatePreviewGrid();
+        };
+        reader.readAsDataURL(file);
+    });
+}
+
+// 更新预览网格
+function updatePreviewGrid() {
+    const previewGrid = document.querySelector('.image-preview-grid');
+    previewGrid.innerHTML = tempImages.map((img, index) => `
+        <div class="image-preview">
+            <img src="${img}" alt="预览图片">
+            <button onclick="removePreviewImage(${index})">×</button>
+        </div>
+    `).join('');
+}
+
+// 移除预览图片
+function removePreviewImage(index) {
+    tempImages.splice(index, 1);
+    updatePreviewGrid();
+}
+
+// 保存环境图片
+function saveEnvironmentImages() {
+    if (tempImages.length > 0) {
+        careerData.environment.push({
+            images: [...tempImages]
+        });
+        saveData();
+        tempImages = [];
+        openPage('environment');
+    }
+}
+
+// 向已有卡片添加图片
+function addImageToCard(cardIndex) {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = 'image/*';
+    input.multiple = true;
+    input.onchange = function(event) {
+        const files = event.target.files;
+        const currentImages = careerData.environment[cardIndex].images || [];
+        
+        if (currentImages.length + files.length > 5) {
+            alert('每个记录最多只能包含5张图片');
+            return;
+        }
+        
+        let processedFiles = 0;
+        Array.from(files).forEach(file => {
+            if (currentImages.length >= 5) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImages.push(e.target.result);
+                processedFiles++;
+                
+                if (processedFiles === files.length) {
+                    careerData.environment[cardIndex].images = currentImages;
+                    saveData();
+                    openPage('environment');
+                }
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+    input.click();
 } 
