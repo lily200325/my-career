@@ -151,9 +151,9 @@ function getEnvironmentContent() {
                     <div class="content">
                         <div class="image-grid">
                             ${(item.images || []).map((img, imgIndex) => `
-                                <div class="image-item">
+                                <div class="image-item" onclick="showImageViewer('${img}')">
                                     <img src="${img}" alt="环境图片">
-                                    <button class="delete-image-btn" onclick="deleteImage(${index}, ${imgIndex})">×</button>
+                                    <button class="delete-image-btn" onclick="deleteImage(${index}, ${imgIndex}); event.stopPropagation();">×</button>
                                 </div>
                             `).join('')}
                             ${(!item.images || item.images.length < 5) ? `
@@ -797,4 +797,42 @@ function addImageToCard(cardIndex) {
         });
     };
     input.click();
+}
+
+// 显示图片查看器
+function showImageViewer(imageSrc) {
+    // 创建模态框
+    const modal = document.createElement('div');
+    modal.className = 'image-viewer-modal';
+    modal.innerHTML = `
+        <div class="image-viewer-content">
+            <button class="image-viewer-close" onclick="closeImageViewer(this)">×</button>
+            <img src="${imageSrc}" alt="查看图片">
+        </div>
+    `;
+    
+    // 添加点击背景关闭功能
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeImageViewer(modal);
+        }
+    });
+    
+    // 添加键盘ESC关闭功能
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            closeImageViewer(modal);
+        }
+    });
+    
+    document.body.appendChild(modal);
+    // 触发重排以启动动画
+    setTimeout(() => modal.classList.add('show'), 10);
+}
+
+// 关闭图片查看器
+function closeImageViewer(element) {
+    const modal = element.closest('.image-viewer-modal');
+    modal.classList.remove('show');
+    setTimeout(() => modal.remove(), 300);
 }
